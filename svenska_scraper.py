@@ -10,7 +10,7 @@ file_name = "scraper.xlsx"
 sheet_name = "scraper"  # sheet where you have your words
 lang = "spa"  # Language code used to search translations
 create_exercises = True
-strict = True
+strict = False
 '''
 strict = True  => only finds translations where the baseform is exactly equal to the searched word
 strict = False => includes also in the results inflections of the word.
@@ -167,7 +167,7 @@ def main():
     global terms
     # import words in excel document.
     for i in range(ws.min_row + 1, ws.max_row + 1):
-        word = Term(ws["A" + str(i)].value, i)
+        word = Term(ws["A" + str(i)].value.lower(), i)
         if word.swedish == None:
             break
         terms.append(word)
