@@ -11,14 +11,6 @@ sheet_name = "scraper"  # sheet where you have your words
 lang = "spa"  # Language code used to search translations
 create_exercises = True
 strict = False
-'''
-strict = True  => only finds translations where the baseform is exactly equal to the searched word
-strict = False => includes also in the results inflections of the word.
-   
-Example: when searching for word "låg". 
-    If strict = False => the translations "lie" (ligga, låg, legat) and low (låg, lågt, låga) are returned
-    If strict = True  => only "low" is returned since it is the only one that matches the baseform (låg) of the query
-'''
 
 wb = px.load_workbook(path + file_name)
 ws = wb.get_sheet_by_name(sheet_name)
@@ -71,7 +63,7 @@ class Term:
             try:
                 self.inflection.insert(0, result["_source"]["FormRepresentations"][0]["baseform"])
                 for inflection in results[0]["_source"]["WordForms"]:
-                    if inflection["writtenForm"] not in self.inflection:
+                    if not inflection["writtenForm"] in self.inflection:
                         self.inflection.append(inflection["writtenForm"])
             except:
                 print "Inflections weren't found"
@@ -84,7 +76,7 @@ class Term:
             for t in translations:
                 if t["lang"] == "swe" and not t["nativeOfSpeech"] in self.word_type:
                     self.word_type.append(t["nativeOfSpeech"])
-                if t["lang"] == lang:
+                if t["lang"] == lang and not t["baseform"] in self.translation:
                     self.translation.append(t["baseform"])
             try:
                 grammar = result["_source"]["Sense"][0]["gram"]
