@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-import re, urllib2, json, sys, openpyxl as px
+import importlib, re, urllib.request, json, sys, openpyxl as px
 
-reload(sys)
-sys.setdefaultencoding('utf8')
+importlib.reload(sys)
 
 # Configuration variables
 path = ""
@@ -13,7 +12,7 @@ create_exercises = True
 strict = False
 
 wb = px.load_workbook(path + file_name)
-ws = wb.get_sheet_by_name(sheet_name)
+ws = wb[sheet_name]
 terms = []
 sentences = []
 
@@ -41,7 +40,7 @@ class Term:
         try:
             wb.save(path + file_name)
         except IOError:
-            print "Close your excel file " + file_name + "!!!"
+            print ("Close your excel file " + file_name + "!!!")
 
     # calls språkbanken's api for the exact term in the lexin dictionary to retrieve translation, construction, word type and inflection.
     def lexin(self):
@@ -53,7 +52,8 @@ class Term:
               + self.swedish.replace(" ", "%20") + "|&resource=lexin"
         # baseformC = exactly baseform (ex ställa); wfC = any wordform (ex ställer, ställt)
         # for more operators => https://ws.spraakbanken.gu.se/ws/karp/v4/modeinfo/karp
-        raw_json = urllib2.urlopen(url)
+        url = url.encode('ascii', 'ignore').decode('ascii')
+        raw_json = urllib.request.urlopen(url)
         parsed_json = json.load(raw_json)
         results = parsed_json["hits"]["hits"]
         if not results:  # if no results are found skip
@@ -66,7 +66,7 @@ class Term:
                     if not inflection["writtenForm"] in self.inflection:
                         self.inflection.append(inflection["writtenForm"])
             except:
-                print "Inflections weren't found"
+                print ("Inflections weren't found")
             # retrieves translations of the searched word
             translations = result["_source"]["FormRepresentations"]
             if (strict and translations[0]["baseform"] != self.swedish) or \
@@ -85,14 +85,16 @@ class Term:
                 else:
                     self.construction.append(grammar)
             except:
-                print "No grammar found for term " + self.swedish
+                print ("No grammar found for term " + self.swedish)
 
 
     # retrieves an example sentence from Svenska Akademins Ordlista for the given word.
     def saol(self):
         word = self.swedish.replace(" ", "%20")
         url = "https://svenska.se/so/?sok=" + word
-        html = urllib2.urlopen(url).read()
+        url = url.encode('ascii', 'ignore').decode('ascii')
+        html = urllib.request.urlopen(url).read()
+        html = html.decode('utf-8')
         examples = re.findall(r'<span class="syntex">(.*?)</span>', html)
         # splits the sentences to calculate the one with most words.
         broken = []
@@ -151,7 +153,7 @@ def generate_questions():
     try:
         wb.save(path + file_name)
     except IOError:
-        print "Close your excel file " + file_name + "!!! Otherwise I can't write stuff on it"
+        print ("Close your excel file " + file_name + "!!! Otherwise I can't write stuff on it")
 
 
 def main():
@@ -166,7 +168,7 @@ def main():
 
     # perform queries
     for term in terms:
-        print term.swedish
+        print (term.swedish)
         term.lexin()
         term.saol()
         term.write_data()
